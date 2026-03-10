@@ -1,104 +1,87 @@
-import React from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { employeeSchema, EmployeeFormValues } from '@/schema/employeeSchema';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function EmployeeForm() {
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<EmployeeFormValues>({
-    resolver: zodResolver(employeeSchema),
-    mode: "onTouched", // Validates when user blurs the field
-  });
-
-  const onSubmit = (data: EmployeeFormValues) => {
-    console.log("Form Submitted Successfully:", data);
-    alert("Employee Saved!");
-  };
+export default function HomeScreen() {
+  const router = useRouter();
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Employee Information</Text>
-
-      <FormField 
-        label="Full Name" 
-        name="fullName" 
-        control={control} 
-        error={errors.fullName?.message} 
-        placeholder="John Doe"
-      />
-
-      <FormField 
-        label="Email Address" 
-        name="email" 
-        control={control} 
-        error={errors.email?.message} 
-        placeholder="john@company.com"
-        keyboardType="email-address"
-      />
-
-      <FormField 
-        label="Phone Number" 
-        name="phone" 
-        control={control} 
-        error={errors.phone?.message} 
-        placeholder="1234567890"
-        keyboardType="phone-pad"
-      />
-
-      <FormField 
-        label="Employee ID" 
-        name="employeeId" 
-        control={control} 
-        error={errors.employeeId?.message} 
-        placeholder="EMP-123"
-      />
-
-      <FormField 
-        label="Postal Code" 
-        name="postalCode" 
-        control={control} 
-        error={errors.postalCode?.message} 
-        placeholder="A1B 2C3"
-      />
-
-      <View style={styles.buttonContainer}>
-        <Button title="Submit Information" onPress={handleSubmit(onSubmit)} color="#007AFF" />
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Ionicons name="leaf" size={48} color="#10B981" />
+        <Text style={styles.title}>QualityForms</Text>
+        <Text style={styles.subtitle}>Select a form to get started</Text>
       </View>
-    </ScrollView>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push('/employee')}
+      >
+        <Ionicons name="person-outline" size={22} color="#fff" />
+        <Text style={styles.buttonText}>Employee Information Form</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push('/signin')}
+      >
+        <Ionicons name="log-in-outline" size={22} color="#fff" />
+        <Text style={styles.buttonText}>Sign In</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push('/signup')}
+      >
+        <Ionicons name="person-add-outline" size={22} color="#fff" />
+        <Text style={styles.buttonText}>Sign Up</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
-const FormField = ({ label, name, control, error, ...rest }: any) => (
-  <View style={styles.inputWrapper}>
-    <Text style={styles.label}>{label}</Text>
-    <Controller
-      control={control}
-      name={name}
-      render={({ field: { onChange, onBlur, value } }) => (
-        <TextInput
-          style={[styles.input, error && styles.inputError]}
-          onBlur={onBlur}
-          onChangeText={onChange}
-          value={value}
-          {...rest}
-        />
-      )}
-    />
-    {error && <Text style={styles.errorText}>{error}</Text>}
-  </View>
-);
-
 const styles = StyleSheet.create({
-  container: { padding: 20, paddingTop: 60 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  inputWrapper: { marginBottom: 15 },
-  label: { fontSize: 16, marginBottom: 5, color: '#333' },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#fff' },
-  inputError: { borderColor: '#ff3b30' },
-  errorText: { color: '#ff3b30', fontSize: 12, marginTop: 4 },
-  buttonContainer: { marginTop: 10 }
+  container: {
+    flex: 1,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 48,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#065F46',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginBottom: 8,
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10B981',
+    padding: 16,
+    borderRadius: 12,
+    width: '100%',
+    marginBottom: 16,
+    gap: 12,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
