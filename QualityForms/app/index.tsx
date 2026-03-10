@@ -70,8 +70,6 @@ export default function EmployeeForm() {
       <View style={styles.buttonContainer}>
         <Button title="Submit Information" onPress={handleSubmit(onSubmit)} color="#007AFF" />
       </View>
-      <SignInForm/>
-      <SignUpForm/>
     </ScrollView>
   );
 }
