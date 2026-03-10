@@ -3,6 +3,8 @@ import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-nat
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { employeeSchema, EmployeeFormValues } from '@/schema/employeeSchema';
+import SignInForm from './SignInForm';
+import SignUpForm from './SignUpForm';
 
 export default function EmployeeForm() {
   const {
@@ -68,6 +70,8 @@ export default function EmployeeForm() {
       <View style={styles.buttonContainer}>
         <Button title="Submit Information" onPress={handleSubmit(onSubmit)} color="#007AFF" />
       </View>
+      <SignInForm/>
+      <SignUpForm/>
     </ScrollView>
   );
 }
