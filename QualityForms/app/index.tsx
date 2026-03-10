@@ -1,6 +1,12 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { View, Text, TouchableOpacity, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { employeeSchema, EmployeeFormValues } from '@/schema/employeeSchema';
+import SignInForm from './SignInForm';
+import SignUpForm from './SignUpForm';
 
 export default function HomeScreen() {
   const router = useRouter();
