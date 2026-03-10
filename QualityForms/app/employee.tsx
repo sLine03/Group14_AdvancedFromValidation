@@ -23,50 +23,54 @@ export default function EmployeeForm() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Employee Information</Text>
 
-      <FormField 
-        label="Full Name" 
-        name="fullName" 
-        control={control} 
-        error={errors.fullName?.message} 
+      <FormField
+        label="Full Name"
+        name="fullName"
+        control={control}
+        error={errors.fullName?.message}
         placeholder="John Doe"
       />
 
-      <FormField 
-        label="Email Address" 
-        name="email" 
-        control={control} 
-        error={errors.email?.message} 
+      <FormField
+        label="Email Address"
+        name="email"
+        control={control}
+        error={errors.email?.message}
         placeholder="john@company.com"
         keyboardType="email-address"
       />
 
-      <FormField 
-        label="Phone Number" 
-        name="phone" 
-        control={control} 
-        error={errors.phone?.message} 
+      <FormField
+        label="Phone Number"
+        name="phone"
+        control={control}
+        error={errors.phone?.message}
         placeholder="1234567890"
         keyboardType="phone-pad"
       />
 
-      <FormField 
-        label="Employee ID" 
-        name="employeeId" 
-        control={control} 
-        error={errors.employeeId?.message} 
+      <FormField
+        label="Employee ID"
+        name="employeeId"
+        control={control}
+        error={errors.employeeId?.message}
         placeholder="EMP-123"
       />
 
-      <FormField 
-        label="Postal Code" 
-        name="postalCode" 
-        control={control} 
-        error={errors.postalCode?.message} 
+      <FormField
+        label="Postal Code"
+        name="postalCode"
+        control={control}
+        error={errors.postalCode?.message}
         placeholder="A1B 2C3"
       />
 
       <View style={styles.buttonContainer}>
-        <Button title="Submit Information" onPress={handleSubmit(onSubmit)} color="#007AFF" />
+        <Button
+          title="Submit Information"
+          onPress={handleSubmit(onSubmit)}
+          color="#10B981"
+        />
       </View>
     </ScrollView>
   );
@@ -94,11 +98,24 @@ const FormField = ({ label, name, control, error, ...rest }: any) => (
 
 const styles = StyleSheet.create({
   container: { padding: 20, paddingTop: 60 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#065F46",
+    textAlign: "center",
+  },
   inputWrapper: { marginBottom: 15 },
-  label: { fontSize: 16, marginBottom: 5, color: '#333' },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#fff' },
-  inputError: { borderColor: '#ff3b30' },
-  errorText: { color: '#ff3b30', fontSize: 12, marginTop: 4 },
-  buttonContainer: { marginTop: 10 }
+  label: { fontSize: 16, marginBottom: 5, color: "#333" },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+  inputError: { borderColor: "#ff3b30" },
+  errorText: { color: "#ff3b30", fontSize: 12, marginTop: 4 },
+  buttonContainer: { marginTop: 10, backgroundColor: "#10B981" },
 });

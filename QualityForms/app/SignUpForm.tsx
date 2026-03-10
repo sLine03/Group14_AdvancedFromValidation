@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 8,
     marginTop: 20,
-    color: "#333",
+    color: "#065F46",
   },
   subtitle: {
     fontSize: 14,
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   button: {
-    backgroundColor: "#3498db",
+    backgroundColor: "#10B981",
     padding: 16,
     borderRadius: 8,
     alignItems: "center",

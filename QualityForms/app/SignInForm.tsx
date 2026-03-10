@@ -135,14 +135,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#ECFDF5'",
     justifyContent: "center",
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 8,
-    color: "#333",
+    color: "#065F46",
   },
   subtitle: {
     fontSize: 14,
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   button: {
-    backgroundColor: "#3498db",
+    backgroundColor: "#10B981",
     padding: 16,
     borderRadius: 8,
     alignItems: "center",

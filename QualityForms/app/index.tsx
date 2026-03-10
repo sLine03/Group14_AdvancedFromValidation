@@ -21,7 +21,7 @@ export default function HomeScreen() {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push('/employee')}
+        onPress={() => router.push('./employee')}
       >
         <Ionicons name="person-outline" size={22} color="#fff" />
         <Text style={styles.buttonText}>Employee Information Form</Text>
@@ -29,7 +29,7 @@ export default function HomeScreen() {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push('/signin')}
+        onPress={() => router.push('./SignInForm')}
       >
         <Ionicons name="log-in-outline" size={22} color="#fff" />
         <Text style={styles.buttonText}>Sign In</Text>
@@ -37,7 +37,7 @@ export default function HomeScreen() {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push('/signup')}
+        onPress={() => router.push('./SignUpForm')}
       >
         <Ionicons name="person-add-outline" size={22} color="#fff" />
         <Text style={styles.buttonText}>Sign Up</Text>
