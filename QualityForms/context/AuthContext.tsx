@@ -12,7 +12,7 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
-ghjkl;'mcx ,. nkmdsmn klcx,mlkcx, m'
+
 // ── Context ───────────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextType | null>(null);
