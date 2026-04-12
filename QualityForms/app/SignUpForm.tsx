@@ -1,49 +1,41 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
-  View,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
+  View,
 } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 
-// Zod Schema for Sign-Up with password strength rules
-const signUpSchema = z
-  .object({
-    fullName: z
-      .string()
-      .min(2, "Full name must be at least 2 characters")
-      .max(50, "Full name must not exceed 50 characters"),
+// Modified: schema and types now imported from shared lib instead of defined inline
+import { SignUpFormData, signUpSchema } from "@/lib/schemas";
+// Added: centralized friendly error messages for Supabase auth errors
+import { friendlyAuthError } from "@/lib/authErrors";
 
-    email: z.string().email("Invalid email format").nonempty("Email is required"),
+// Added: props interface so AuthContext can be injected when Member 1 merges
+// onSignUp and onNavigateSignIn are optional so the form still works standalone
+interface Props {
+  onSignUp?: (
+    email: string,
+    password: string,
+    fullName: string,
+  ) => Promise<{ error: { message: string } | null }>;
+  onNavigateSignIn?: () => void;
+}
 
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number")
-      .regex(
-        /[@$!%*?&#]/,
-        "Password must contain at least one special character (@$!%*?&#)",
-      ),
-
-    confirmPassword: z.string().nonempty("Please confirm your password"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
-
-type SignUpFormData = z.infer<typeof signUpSchema>;
-
-export default function SignUpForm() {
+export default function SignUpForm({ onSignUp, onNavigateSignIn }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // Added: auth error from Supabase response (separate from Zod validation errors)
+  const [authError, setAuthError] = useState<string | null>(null);
+  // Added: tracks in-flight request to show spinner and block double-submit
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Added: shown after successful sign-up to prompt email confirmation
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const {
     control,
@@ -57,9 +49,34 @@ export default function SignUpForm() {
 
   const password = watch("password");
 
-  const onSubmit = (data: SignUpFormData) => {
-    console.log("Sign Up Data:", data);
-    alert(`Account created successfully for ${data.fullName}!`);
+  // Modified: onSubmit is now async and calls onSignUp prop instead of showing a local alert
+  const onSubmit = async (data: SignUpFormData) => {
+    setAuthError(null);
+    setSuccessMessage(null);
+    setIsSubmitting(true);
+    try {
+      if (onSignUp) {
+        const { error } = await onSignUp(
+          data.email,
+          data.password,
+          data.fullName,
+        );
+        if (error) {
+          // Added: map raw Supabase error to readable message
+          setAuthError(friendlyAuthError(error.message));
+        } else {
+          // Added: Supabase sends a confirmation email by default — inform the user
+          setSuccessMessage(
+            "Account created! Check your email to confirm your address, then sign in.",
+          );
+        }
+      }
+    } catch {
+      // Added: catch unexpected errors (e.g. network failure outside Supabase)
+      setAuthError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Password strength indicator
@@ -89,6 +106,24 @@ export default function SignUpForm() {
         Join us today! Please fill in the details below.
       </Text>
 
+      {/* Added: error banner for auth failures (email taken, weak password, etc.) */}
+      {authError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{authError}</Text>
+        </View>
+      )}
+
+      {/* Added: success banner shown after account creation — prompts email confirmation */}
+      {successMessage && (
+        <View style={styles.successBanner}>
+          <Text style={styles.successBannerText}>{successMessage}</Text>
+          {/* Added: shortcut to sign-in screen after successful registration */}
+          <TouchableOpacity onPress={onNavigateSignIn}>
+            <Text style={styles.successBannerLink}>Go to Sign In →</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Full Name */}
       <View style={styles.fieldContainer}>
         <Text style={styles.label}>Full Name *</Text>
@@ -102,6 +137,7 @@ export default function SignUpForm() {
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
+              editable={!isSubmitting} // Added: disable input while request is in flight
             />
           )}
         />
@@ -126,6 +162,7 @@ export default function SignUpForm() {
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
+              editable={!isSubmitting} // Added: disable input while request is in flight
             />
           )}
         />
@@ -154,6 +191,7 @@ export default function SignUpForm() {
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
+                editable={!isSubmitting} // Added: disable input while request is in flight
               />
             )}
           />
@@ -173,7 +211,7 @@ export default function SignUpForm() {
                 style={[
                   styles.strengthBarFill,
                   {
-                    width: passwordStrength.width,
+                    width: `${passwordStrength.width}%`, // Modified: was a plain number (px), now a percentage string so the bar scales correctly on all screen sizes
                     backgroundColor: passwordStrength.color,
                   },
                 ]}
@@ -212,6 +250,7 @@ export default function SignUpForm() {
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
+                editable={!isSubmitting} // Added: disable input while request is in flight
               />
             )}
           />
@@ -230,18 +269,28 @@ export default function SignUpForm() {
       </View>
 
       {/* Submit Button */}
+      {/* Modified: also disabled while isSubmitting to prevent double-submit */}
       <TouchableOpacity
-        style={[styles.button, !isValid && styles.buttonDisabled]}
+        style={[
+          styles.button,
+          (!isValid || isSubmitting) && styles.buttonDisabled,
+        ]}
         onPress={handleSubmit(onSubmit)}
-        disabled={!isValid}
+        disabled={!isValid || isSubmitting}
       >
-        <Text style={styles.buttonText}>Create Account</Text>
+        {/* Added: show spinner while request is in flight, button text otherwise */}
+        {isSubmitting ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Create Account</Text>
+        )}
       </TouchableOpacity>
 
       {/* Sign In Link */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>Already have an account? </Text>
-        <TouchableOpacity>
+        {/* Modified: onPress now calls onNavigateSignIn prop instead of doing nothing */}
+        <TouchableOpacity onPress={onNavigateSignIn}>
           <Text style={styles.footerLink}>Sign In</Text>
         </TouchableOpacity>
       </View>
@@ -260,12 +309,44 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 8,
     marginTop: 20,
-    color: "#333",
+    color: "#065F46",
   },
   subtitle: {
     fontSize: 14,
     color: "#666",
     marginBottom: 30,
+  },
+  // Added: red banner for Supabase auth errors
+  errorBanner: {
+    backgroundColor: "#ffe6e6",
+    borderWidth: 1,
+    borderColor: "#e74c3c",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorBannerText: {
+    color: "#c0392b",
+    fontSize: 14,
+  },
+  // Added: green banner shown after successful account creation
+  successBanner: {
+    backgroundColor: "#d4edda",
+    borderWidth: 1,
+    borderColor: "#27ae60",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  successBannerText: {
+    color: "#155724",
+    fontSize: 14,
+    marginBottom: 6,
+  },
+  successBannerLink: {
+    color: "#10B981",
+    fontSize: 14,
+    fontWeight: "600",
   },
   fieldContainer: {
     marginBottom: 20,
@@ -330,7 +411,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   button: {
-    backgroundColor: "#3498db",
+    backgroundColor: "#10B981",
     padding: 16,
     borderRadius: 8,
     alignItems: "center",
@@ -355,7 +436,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   footerLink: {
-    color: "#3498db",
+    color: "#10B981",
     fontSize: 14,
     fontWeight: "600",
   },

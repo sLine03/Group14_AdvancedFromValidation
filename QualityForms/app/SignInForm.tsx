@@ -5,38 +5,64 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator, // Added: spinner for loading state
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 
-// Zod Schema for Sign-In
-const signInSchema = z.object({
-  email: z.string().email("Invalid email format").nonempty("Email is required"),
+// Modified: schema and types now imported from shared lib instead of defined inline
+import { signInSchema, SignInFormData } from "@/lib/schemas";
+// Added: centralized friendly error messages for Supabase auth errors
+import { friendlyAuthError } from "@/lib/authErrors";
 
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .nonempty("Password is required"),
-});
+// Added: props interface so AuthContext can be injected when Member 1 merges
+// onSignIn and onNavigateSignUp are optional so the form still works standalone
+interface Props {
+  onSignIn?: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: { message: string } | null }>;
+  onNavigateSignUp?: () => void;
+}
 
-type SignInFormData = z.infer<typeof signInSchema>;
-
-export default function SignInForm() {
+export default function SignInForm({ onSignIn, onNavigateSignUp }: Props) {
   const [showPassword, setShowPassword] = useState(false);
+  // Added: auth error from Supabase response (separate from Zod validation errors)
+  const [authError, setAuthError] = useState<string | null>(null);
+  // Added: tracks in-flight request to show spinner and block double-submit
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     control,
     handleSubmit,
+    setValue, // Added: used to clear password field on failed sign-in
     formState: { errors, isValid },
   } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
-    mode: "onBlur", // Validate on blur for better UX
+    mode: "onChange", // Modified: was "onBlur" — changed to "onChange" so isValid updates immediately
   });
 
-  const onSubmit = (data: SignInFormData) => {
-    console.log("Sign In Data:", data);
-    alert(`Welcome back, ${data.email}!`);
+  // Modified: onSubmit is now async and calls onSignIn prop instead of showing a local alert
+  const onSubmit = async (data: SignInFormData) => {
+    setAuthError(null);
+    setIsSubmitting(true);
+    try {
+      if (onSignIn) {
+        const { error } = await onSignIn(data.email, data.password);
+        if (error) {
+          // Added: map raw Supabase error to readable message, clear password for security
+          setAuthError(friendlyAuthError(error.message));
+          setValue("password", "");
+        }
+        // On success, _layout.tsx handles redirect automatically via session listener
+      }
+    } catch {
+      // Added: catch unexpected errors (e.g. network failure outside Supabase)
+      setAuthError("An unexpected error occurred. Please try again.");
+      setValue("password", "");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -45,6 +71,13 @@ export default function SignInForm() {
       <Text style={styles.subtitle}>
         Welcome back! Please sign in to continue.
       </Text>
+
+      {/* Added: error banner for auth failures (wrong password, network error, etc.) */}
+      {authError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{authError}</Text>
+        </View>
+      )}
 
       {/* Email Field */}
       <View style={styles.fieldContainer}>
@@ -62,6 +95,7 @@ export default function SignInForm() {
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
+              editable={!isSubmitting} // Added: disable input while request is in flight
             />
           )}
         />
@@ -91,6 +125,7 @@ export default function SignInForm() {
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
+                editable={!isSubmitting} // Added: disable input while request is in flight
               />
             )}
           />
@@ -112,18 +147,28 @@ export default function SignInForm() {
       </TouchableOpacity>
 
       {/* Submit Button */}
+      {/* Modified: also disabled while isSubmitting to prevent double-submit */}
       <TouchableOpacity
-        style={[styles.button, !isValid && styles.buttonDisabled]}
+        style={[
+          styles.button,
+          (!isValid || isSubmitting) && styles.buttonDisabled,
+        ]}
         onPress={handleSubmit(onSubmit)}
-        disabled={!isValid}
+        disabled={!isValid || isSubmitting}
       >
-        <Text style={styles.buttonText}>Sign In</Text>
+        {/* Added: show spinner while request is in flight, button text otherwise */}
+        {isSubmitting ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Sign In</Text>
+        )}
       </TouchableOpacity>
 
       {/* Sign Up Link */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>Don't have an account? </Text>
-        <TouchableOpacity>
+        {/* Modified: onPress now calls onNavigateSignUp prop instead of doing nothing */}
+        <TouchableOpacity onPress={onNavigateSignUp}>
           <Text style={styles.footerLink}>Sign Up</Text>
         </TouchableOpacity>
       </View>
@@ -135,19 +180,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#ECFDF5",
     justifyContent: "center",
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 8,
-    color: "#333",
+    color: "#065F46",
   },
   subtitle: {
     fontSize: 14,
     color: "#666",
     marginBottom: 30,
+  },
+  // Added: red banner for Supabase auth errors
+  errorBanner: {
+    backgroundColor: "#ffe6e6",
+    borderWidth: 1,
+    borderColor: "#e74c3c",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorBannerText: {
+    color: "#c0392b",
+    fontSize: 14,
   },
   fieldContainer: {
     marginBottom: 20,
@@ -194,11 +252,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   forgotPasswordText: {
-    color: "#3498db",
+    color: "#10B981",
     fontSize: 14,
   },
   button: {
-    backgroundColor: "#3498db",
+    backgroundColor: "#10B981",
     padding: 16,
     borderRadius: 8,
     alignItems: "center",
@@ -221,7 +279,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   footerLink: {
-    color: "#3498db",
+    color: "#10B981",
     fontSize: 14,
     fontWeight: "600",
   },
